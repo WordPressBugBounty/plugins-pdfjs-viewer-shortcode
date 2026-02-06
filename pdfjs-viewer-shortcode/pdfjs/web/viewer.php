@@ -20,6 +20,10 @@ Adobe CMap resources are covered by their own copyright but the same license:
 
 See https://github.com/adobe-type-tools/cmap-resources
 -->
+<?php
+  // Simple versioning to bust browser/CDN cache when plugin updates.
+  $asset_version = isset($_GET['v']) ? preg_replace('/[^a-zA-Z0-9._-]/', '', $_GET['v']) : '1.0';
+?>
 <html dir="ltr" mozdisallowselectionprint>
 <head>
     <meta charset="utf-8">
@@ -28,12 +32,12 @@ See https://github.com/adobe-type-tools/cmap-resources
     <title>PDF.js viewer</title>
 
     <!-- This snippet is used in production (included from viewer.html) -->
-    <link rel="resource" type="application/l10n" href="locale/locale.json">
-    <script src="../build/pdf.js" type="module"></script>
+    <link rel="resource" type="application/l10n" href="locale/locale.json?v=<?php echo $asset_version; ?>">
+    <script src="../build/pdf.js?v=<?php echo $asset_version; ?>" type="module"></script>
 
-    <link rel="stylesheet" href="viewer.css">
+    <link rel="stylesheet" href="viewer.css?v=<?php echo $asset_version; ?>">
 
-    <script src="viewer.js" type="module"></script>
+    <script src="viewer.js?v=<?php echo $asset_version; ?>" type="module"></script>
 </head>
 
   <body tabindex="0">
@@ -183,7 +187,29 @@ See https://github.com/adobe-type-tools/cmap-resources
                 </span>
               </div>
               <div id="toolbarViewerRight" class="toolbarHorizontalGroup">
-                <div id="editorModeButtons" class="toolbarHorizontalGroup" role="radiogroup" <?php if ($_GET["editButtons"]!=="true") { echo 'style="display:none;"'; } ?>>
+                <div id="editorModeButtons" class="toolbarHorizontalGroup" role="radiogroup" <?php if (isset($_GET["editButtons"]) && $_GET["editButtons"]!=="true") { echo 'style="display:none;"'; } ?>>
+                  <div id="editorComment" class="toolbarButtonWithContainer" hidden="true">
+                    <button id="editorCommentButton" class="toolbarButton" type="button" tabindex="0" disabled="disabled" aria-expanded="false" aria-haspopup="true" aria-controls="editorCommentParamsToolbar" data-l10n-id="pdfjs-editor-comment-button">
+                      <span data-l10n-id="pdfjs-editor-comment-button-label"></span>
+                    </button>
+                    <div class="editorParamsToolbar hidden menu" id="editorCommentParamsToolbar">
+                      <div id="editorCommentsSidebar" class="menuContainer comment sidebar" role="landmark" aria-labelledby="editorCommentsSidebarHeader">
+                        <div id="editorCommentsSidebarResizer" class="sidebarResizer" role="separator" aria-controls="editorCommentsSidebar" tabindex="0"></div>
+                        <div id="editorCommentsSidebarHeader" role="heading" aria-level="2">
+                          <span class="commentCount">
+                            <span id="editorCommentsSidebarTitle" data-l10n-id="pdfjs-editor-comments-sidebar-title" data-l10n-args='{ "count": 0 }'></span>
+                            <span id="editorCommentsSidebarCount"></span>
+                          </span>
+                          <button id="editorCommentsSidebarCloseButton" type="button" tabindex="0" data-l10n-id="pdfjs-editor-comments-sidebar-close-button">
+                            <span data-l10n-id="pdfjs-editor-comments-sidebar-close-button-label"></span>
+                          </button>
+                        </div>
+                        <div id="editorCommentsSidebarListContainer" tabindex="-1">
+                          <ul id="editorCommentsSidebarList"></ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <div id="editorSignature" class="toolbarButtonWithContainer" hidden="true">
                     <button id="editorSignatureButton" class="toolbarButton" type="button" tabindex="0" disabled="disabled" role="radio" aria-expanded="false" aria-haspopup="true" aria-controls="editorSignatureParamsToolbar" data-l10n-id="pdfjs-editor-signature-button">
                       <span data-l10n-id="pdfjs-editor-signature-button-label"></span>
@@ -703,7 +729,24 @@ See https://github.com/adobe-type-tools/cmap-resources
             </div>
         </dialog>
 
-        <dialog id="printServiceDialog" style="min-width: 200px;">
+        <dialog class="dialog commentManager" id="commentManagerDialog" aria-labelledby="commentManagerTitle">
+          <div class="mainContainer">
+            <div class="title" id="commentManagerToolbar">
+              <span id="commentManagerTitle" role="sectionhead" data-l10n-id="pdfjs-editor-edit-comment-dialog-title-when-adding"></span>
+            </div>
+            <textarea id="commentManagerTextInput" data-l10n-id="pdfjs-editor-edit-comment-dialog-text-input" tabindex="0"></textarea>
+            <div class="dialogButtonsGroup">
+              <button id="commentManagerCancelButton" type="button" class="secondaryButton" tabindex="0">
+                <span data-l10n-id="pdfjs-editor-edit-comment-dialog-cancel-button"></span>
+              </button>
+              <button id="commentManagerSaveButton" type="button" class="primaryButton" disabled tabindex="0">
+                <span data-l10n-id="pdfjs-editor-edit-comment-dialog-save-button-when-adding"></span>
+              </button>
+            </div>
+          </div>
+        </dialog>
+
+        <dialog id="printServiceDialog" style="min-width: 200px">
             <div class="row">
             <span data-l10n-id="pdfjs-print-progress-message"></span>
             </div>
