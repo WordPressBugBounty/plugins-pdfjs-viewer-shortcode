@@ -132,10 +132,8 @@ function pdfjs_render_viewer( $args ) {
 
 		// Check if the external domains feature is enabled and the host is whitelisted.
 		if ( 'on' === get_option( 'pdfjs_allow_external_domains', '' ) ) {
-			$allowed_domains = get_option( 'pdfjs_allowed_domains', '' );
-			$allowed_list    = array_filter( array_map( 'trim', explode( "\n", $allowed_domains ) ) );
 			// Exact hostname match only — subdomains are not implicitly trusted.
-			if ( in_array( strtolower( $parsed_file['host'] ), $allowed_list, true ) ) {
+			if ( pdfjs_is_domain_whitelisted( $parsed_file['host'] ) ) {
 				$domain_allowed = true;
 				// Route external URL through proxy to bypass PDF.js cross-origin restrictions
 				$proxy_base = plugin_dir_url( dirname( __FILE__ ) ) . 'pdfjs/web/pdf-proxy.php';
@@ -172,9 +170,7 @@ function pdfjs_render_viewer( $args ) {
 	$fullscreen_target_attr = ( 'true' === $fullscreen_target ) ? 'target="_blank"' : '';
 
 	// Build viewer URL with all parameters.
-	// Note: add_query_arg() will handle proper URL encoding of all parameters,
-	// so we pass the file URL as-is. It's already been escaped via esc_url() above.
-	// Using rawurlencode() here causes double-encoding which can break some PDF URLs.
+	// Note: add_query_arg() does not URL-encode values, so the file URL is passed as-is.
 
 	// Build base query args in a structured way for consistency and performance
 	$query_args = array(

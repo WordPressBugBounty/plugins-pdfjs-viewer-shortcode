@@ -4,8 +4,8 @@ This guide contains developer-focused setup, commands, and structure details. En
 
 ## Requirements
 
--   Node.js 18+ (use [nvm](https://github.com/nvm-sh/nvm) to manage versions)
--   npm 10+
+- Node.js `^22.22.2`, `^24.15.0`, or `>=26.0.0` (use [nvm](https://github.com/nvm-sh/nvm) to manage versions)
+- npm 10+
 
 ## Quick Start
 
@@ -51,24 +51,24 @@ readme.md   # User-focused documentation
 
 ## Key PHP Components
 
--   `inc/render-viewer.php` – Shared rendering logic for block & shortcode.
--   `inc/shortcode.php` – Shortcode handler using shared renderer.
--   `inc/embed.php` – Legacy wrapper (kept for backward compatibility).
--   `inc/gutenberg-block.php` – Block registration & script localization.
--   `inc/options-page.php` – Admin settings page.
+- `inc/render-viewer.php` – Shared rendering logic for block & shortcode.
+- `inc/shortcode.php` – Shortcode handler using shared renderer.
+- `inc/embed.php` – Legacy wrapper (kept for backward compatibility).
+- `inc/gutenberg-block.php` – Block registration & script localization.
+- `inc/options-page.php` – Admin settings page.
 
 ## Shared Helpers
 
--   `pdfjs_get_options()` – Consistent retrieval of plugin options.
--   `pdfjs_render_viewer()` – Builds iframe + fullscreen link.
--   `pdfjs_sanitize_option()` – Sanitizes stored options.
+- `pdfjs_get_options()` – Consistent retrieval of plugin options.
+- `pdfjs_render_viewer()` – Builds iframe + fullscreen link.
+- `pdfjs_sanitize_option()` – Sanitizes stored options.
 
 ## Development Tips
 
--   Avoid editing anything inside `blocks/build/`; it is generated.
--   Use `attachment_id` when possible instead of raw `url` for security.
--   Keep changes atomic; avoid patching built bundles manually.
--   Run `npm run build` before committing to ensure assets are current.
+- Avoid editing anything inside `blocks/build/`; it is generated.
+- Use `attachment_id` when possible instead of raw `url` for security.
+- Keep changes atomic; avoid patching built bundles manually.
+- Run `npm run build` before committing to ensure assets are current.
 
 ## Updating Dependencies
 
@@ -92,15 +92,19 @@ npm run update:pdfjs -- update/pdfjs-5.5.207-legacy-dist
 
 This command will:
 
--   Sync `build/` and `web/` into this repo's `pdfjs/` folder.
--   Mirror key `.mjs` files to `.js` equivalents (`pdf`, `pdf.worker`, `pdf.sandbox`, `viewer`, `debugger`) so classic browser loading paths continue to work.
--   Keep the `.mjs` files alongside the `.js` files.
+- Sync `build/` and `web/` into this repo's `pdfjs/` folder.
+- Mirror key `.mjs` files to `.js` equivalents (`pdf`, `pdf.worker`, `pdf.sandbox`, `viewer`, `debugger`) so classic browser loading paths continue to work.
+- Keep the `.mjs` files alongside the `.js` files.
 
-After running, compare viewer templates before release:
+The sync does not delete files that are not present in the source package, so the custom `web/viewer.php` and `web/viewer-customizations.js` should remain. The upstream `web/viewer.html` is replaced, then the update script automatically reapplies the repository's Content Security Policy meta tag. Keep `viewer.php` loading the customization script externally; do not move its code back inline, because the viewer's CSP blocks inline scripts.
+
+After running, review the upstream viewer template changes and verify the customized viewer before release:
 
 ```bash
-diff -u pdfjs/web/viewer.html pdfjs/web/viewer.php
+git diff -- pdfjs/web/viewer.html pdfjs/web/viewer.php pdfjs/web/viewer-customizations.js
 ```
+
+Confirm the single CSP meta tag is present, `viewer.php` injects `viewer-customizations.js`, and the customization script's toolbar element IDs still exist in `viewer.html`. Then open a PDF in the viewer and check that loading, worker startup, and the configured toolbar-button toggles still work without CSP errors in the browser console.
 
 ### Cache Busting Strategy
 
@@ -128,7 +132,7 @@ Cache busting is implemented at multiple levels to ensure PDF.js updates are ref
 3. **Runtime replacements** – `viewer.php` handles all cache-busting dynamically:
     - Reads the version from the `?v=` query parameter passed in the iframe URL
     - Intercepts all asset references when loading `viewer.html`
-    - No patching needed during `npm run update:pdfjs` — works with unmodified Mozilla files
+    - Adds the external `viewer-customizations.js` script with the same version parameter
 
 ### How It Works
 
@@ -187,9 +191,9 @@ Version parameters should increment with each plugin release, ensuring browsers 
 
 ## Contributing
 
--   Fork, branch, and submit PRs with clear descriptions.
--   Follow WordPress coding standards (PHP & JS).
--   Keep PRs focused—prefer multiple small PRs to one large one.
+- Fork, branch, and submit PRs with clear descriptions.
+- Follow WordPress coding standards (PHP & JS).
+- Keep PRs focused—prefer multiple small PRs to one large one.
 
 ## License
 
